@@ -4,6 +4,7 @@
 # pip install openai
 
 import re
+import os
 import requests
 from selenium import webdriver
 import time
@@ -14,20 +15,21 @@ import datetime
 import pytz
 import pandas as pd
 
-headers={
-    'User-Agent' : ''
+headers = {
+    'User-Agent': ''
 }
+
 
 class WallStreetNews():
     def __init__(self, channel='global', cursor='', limit=20):
         self.baseUrl = 'https://api-one-wscn.awtmt.com/apiv1/content/information-flow?'
         self.params = {
-            'channel' : channel,
-            '&accept' : 'article',
-            '&cursor' : cursor,
-            '&limit' : str(limit),
-            '&action' : 'upglide'
-            }
+            'channel': channel,
+            '&accept': 'article',
+            '&cursor': cursor,
+            '&limit': str(limit),
+            '&action': 'upglide'
+        }
         self.url = '' + self.baseUrl
         for key, value in self.params.items():
             self.url += key + '=' + value
@@ -43,7 +45,25 @@ class WallStreetNews():
             self.rawData = [i['resource'] for i in response['data']['items'] if i['resource_type'] == 'article']
         else:
             print(f"failed to load! status code: {response['code']}")
-    
+
+    def getNewJson(self):
+        self.params['&cursor'] = self.nextCursor
+        self.url = self.baseUrl
+        for key, value in self.params.items():
+            if key == '&cursor':
+                value = value.replace('=', '%3D')
+            self.url += key + '=' + value
+        print(f"visited following url: {self.url}")
+        response = requests.get(self.url).json()
+        if response['code'] == 20000:
+            if self.nextCursor != response['data']['next_cursor']:
+                self.nextCursor = response['data']['next_cursor']
+            else:
+                print('reaching the maximum.')
+            self.rawData = [i['resource'] for i in response['data']['items'] if i['resource_type'] == 'article']
+        else:
+            print(f"failed to load! status code: {response['code']}")
+
     def getAuthors(self):
         if self.rawData:
             authorsList = [i['author']['display_name'] for i in self.rawData]
@@ -57,28 +77,28 @@ class WallStreetNews():
             return summaryList
         else:
             print('please initiate!')
-    
+
     def getTitles(self):
         if self.rawData:
             titlesList = [i['title'] for i in self.rawData]
             return titlesList
         else:
             print('please initiate!')
-    
+
     def getIds(self):
         if self.rawData:
             idsList = [i['id'] for i in self.rawData]
             return idsList
         else:
             print('please initiate!')
-    
+
     def getTimes(self):
         if self.rawData:
             timesList = [i['display_time'] for i in self.rawData]
             return timesList
         else:
             print('please initiate!')
-    
+
     def nyTimeZone(self, timestamp):
         time = datetime.datetime.fromtimestamp(timestamp)
         ny_tz = pytz.timezone('America/New_York')
@@ -114,19 +134,20 @@ class NewsDetails():
 
 
 class Translator():
-    def __init__(self, extraConstraint = ''):
+    def __init__(self, extraConstraint=''):
         self.baseUrl = 'https://api.poe.com/v1/chat/completions'
         self.apiKey = 'YYd3phri6tU32JTJwV6BaJGUUBasFpi8h__VTt22VJA'
         self.headers = {
-            'Authorization' : f'Bearer {self.apiKey}',
-            'Content-Type' : 'application/json'
+            'Authorization': f'Bearer {self.apiKey}',
+            'Content-Type': 'application/json'
         }
         self.messages = [{'role': 'system', 'content': 'you are a helpful assistant specialized in finance.'},
-                    {'role': 'user', 'content': 'when i send you one chinese text, help me translate into the english, ' + extraConstraint}]
+                         {'role': 'user',
+                          'content': 'when i send you one chinese text, help me translate into the english, ' + extraConstraint}]
         self.initializationData = {
-                'model': 'gpt-3.5-turbo',
-                'messages': self.messages
-            }
+            'model': 'gpt-3.5-turbo',
+            'messages': self.messages
+        }
         try:
             response = requests.post(self.baseUrl, headers=self.headers, json=self.initializationData)
             print(f'initialization status code: {response.status_code}')
@@ -141,15 +162,81 @@ class Translator():
     def translate(self, content):
         user_messages = self.messages + [{'role': 'user', 'content': content}]
         data = {
-                'model': 'gpt-3.5-turbo',
-                'messages': user_messages
-            }
+            'model': 'gpt-3.5-turbo',
+            'messages': user_messages
+        }
         response = requests.post(self.baseUrl, headers=self.headers, json=data)
         print(f'status code: {response.status_code}')
         translated = response.json()['choices'][0]['message']['content']
         return translated
 
 
+def operationSpiderAbstractsEN(limit=50, channel='global', loadTimes=1):
+    wsn = WallStreetNews(limit=limit, channel=channel)
+    wsn.getJson()
+    trans = Translator('no extra text return except the content i send')
+    for i in range(loadTimes):
+        if i != 0:
+            wsn.getNewJson()
+        df = {'time': [], 'title': [], 'abstract': [], 'id': [], 'author': []}
+        timesList = wsn.getTimes()
+        timesList = [wsn.nyTimeZone(i) for i in timesList]
+        summaryList = wsn.getSummary()
+        idsList = wsn.getIds()
+        titlesList = wsn.getTitles()
+        authorsList = wsn.getAuthors()
+        try:
+            history = pd.read_csv('news_data.csv', usecols=['time'], index_col='time')
+            for i, j, k, l, m in zip(timesList, summaryList, idsList, titlesList, authorsList):
+                if i not in history.index:
+                    df['time'].append(i)
+                    df['abstract'].append(trans.translate(j))
+                    df['id'].append(k)
+                    df['title'].append(trans.translate(l))
+                    df['author'].append(m)
+                else:
+                    print('repeat data')
+            df = pd.DataFrame(df)
+            df.to_csv('news_data.csv', mode='a', index=False, header=not os.path.exists('news_data.csv'))
+        except FileNotFoundError as e:
+            df = pd.DataFrame(
+                {'time': timesList, 'title': titlesList, 'abstract': summaryList, 'id': idsList, 'author': authorsList})
+            df.to_csv('news_data.csv', index=False, encoding='utf-8-sig')
+
+
+def operationSpiderAbstractsCN(limit=50, channel='global', loadTimes=1):
+    wsn = WallStreetNews(limit=limit, channel=channel)
+    wsn.getJson()
+    for i in range(loadTimes):
+        if i != 0:
+            wsn.getNewJson()
+        df = {'time': [], 'title': [], 'abstract': [], 'id': [], 'author': []}
+        timesList = wsn.getTimes()
+        timesList = [wsn.nyTimeZone(i) for i in timesList]
+        summaryList = wsn.getSummary()
+        idsList = wsn.getIds()
+        titlesList = wsn.getTitles()
+        authorsList = wsn.getAuthors()
+        try:
+            history = pd.read_csv('news_data_cn.csv', usecols=['time'], index_col='time')
+            for i, j, k, l, m in zip(timesList, summaryList, idsList, titlesList, authorsList):
+                if i not in history.index:
+                    df['time'].append(i)
+                    df['abstract'].append(j)
+                    df['id'].append(k)
+                    df['title'].append(l)
+                    df['author'].append(m)
+                else:
+                    print('repeat data')
+            df = pd.DataFrame(df)
+            df.to_csv('news_data_cn.csv', mode='a', index=False, header=not os.path.exists('news_data_cn.csv'))
+        except FileNotFoundError as e:
+            df = pd.DataFrame(
+                {'time': timesList, 'title': titlesList, 'abstract': summaryList, 'id': idsList, 'author': authorsList})
+            df.to_csv('news_data_cn.csv', index=False, encoding='utf-8-sig')
+
+
+######################################################################################
 def getHtmlListScrollLoading(scrollTimes=5, scrollPauseTime=5):
     driver = webdriver.Chrome()
     url = 'https://wallstreetcn.com/news/global'
@@ -158,7 +245,7 @@ def getHtmlListScrollLoading(scrollTimes=5, scrollPauseTime=5):
     print("initial page length: " + str(initialHeight))
     for i in range(scrollTimes):
         driver.execute_script('window.scrollTo(0, document.body.scrollHeight);')
-        time.sleep(scrollPauseTime) # wait for loading page
+        time.sleep(scrollPauseTime)  # wait for loading page
         newHeight = driver.execute_script('return document.body.scrollHeight')
         print('updated page length: ' + str(newHeight))
     htmlListContent = driver.page_source
@@ -177,11 +264,11 @@ def parseHtmlList(htmlListContent):
     times = [i.find('time')['datetime'] for i in meta]
     ids = [i.split('/')[-1] for i in newsLinks]
     returnValue = {
-        "links" : newsLinks,
-        "titles" : titles,
-        "authors" : authors,
-        "times" : times,
-        "abstracts" : abstracts,
+        "links": newsLinks,
+        "titles": titles,
+        "authors": authors,
+        "times": times,
+        "abstracts": abstracts,
         "ids": ids
     }
     return returnValue
@@ -197,8 +284,8 @@ def getHtml(newsId):
 
 def translator(contentsList):
     translatedContentList = []
-    apiKey='YYd3phri6tU32JTJwV6BaJGUUBasFpi8h__VTt22VJA'
-    url ="https://api.poe.com/v1/chat/completions"
+    apiKey = 'YYd3phri6tU32JTJwV6BaJGUUBasFpi8h__VTt22VJA'
+    url = "https://api.poe.com/v1/chat/completions"
     headers = {
         'Authorization': f'Bearer {apiKey}',
         'Content-Type': 'application/json'
@@ -217,25 +304,8 @@ def translator(contentsList):
             translatedContentList.append("failed to translate this piece of message")
             print(f"request failed: {response.status_code}, error msg: {response.text}")
     return translatedContentList
-    
+
+
 if __name__ == '__main__':
-    wsn = WallStreetNews(limit=50)
-    trans = Translator('no extra text return except the content i send')
-    wsn.getJson()
-    timesList = wsn.getTimes()
-    summaryList = wsn.getSummary()
-
-    idsList = wsn.getIds()
-    titlesList = wsn.getTitles()
-    authorsList = wsn.getAuthors()
-    timesList = [wsn.nyTimeZone(i) for i in timesList]
-    summaryList = [trans.translate(i) for i in summaryList]
-    titlesList = [trans.translate(i) for i in titlesList]
-    df = pd.DataFrame({'time':timesList, 'title':titlesList, 'abstract':summaryList, 'id':idsList, 'author':authorsList})
-    df.to_csv('news_data.csv', index=False, encoding='utf-8-sig')
-    for i in timesList:
-        print(i)
-    for i in summaryList:
-        print(i)
-
-    
+    # operationSpiderAbstractsCN(loadTimes=50)
+    operationSpiderAbstractsEN(loadTimes=3)
