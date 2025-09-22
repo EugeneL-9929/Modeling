@@ -27,13 +27,19 @@ negationWords = {
     'shan', "shan't", 'shouldn', "shouldn't", 'wasn', "wasn't", 'weren', "weren't",
     'won', "won't", 'wouldn', "wouldn't"
 }
+definedPhrases = {'hang seng'}
+
 lemmatizer = nltk.stem.WordNetLemmatizer()
 sia = nltk.sentiment.SentimenyIntensityAnalyzer()
+
+def linkPhrases(text, phrases):
+    for i in phrases:
+        text = text.replace(i, i.replace(' ', '_'))
 
 def textTokenized(text):
     text = re.sub('[^w]+', ' ', text) # get rid of all punctuations
     tokens = nltk.tokenize.word_tokenize(text.lower()) # tokenize the lowercase text
-    tokensPos = nltk.pos_tag(tokens) 
+    tokensPos = nltk.pos_tag(tokens)
 
 
 
