@@ -6,8 +6,47 @@
     <title>Document</title>
 </head>
 <body>
-    <h1> Eugene's Study QuantLib <\h1>
-    <p> In this repository, I mainly develop my testing code with python language and record my study path. I will keep updating some results and summarize my achievements. <\p>
-    <a href='DataExtraction'> Code: Extraction of analytical data </a>
+    <h1> Eugene's Study QuantLib </h1>
+    <p> In this repository, I mainly develop my testing code with python language and record my study path. 
+        I will keep updating some results and summarize my achievements.
+    </p>
+    <p>
+        By the way, I apologize for offering html format readMe file since I get used to the description style of HTML file.
+    </p>
+    <div>
+        <a href="DataExtraction"> Code: Extraction of Analytical Data </a><br>
+        In this part of the code, I offer the way to spider various market news data from a Chinese provider of business and financial information
+        <a href="https://wallstreetcn.com/"><strong>Wall Street CN</strong> (華爾街見聞)</a> via their built-in API.
+        The information including:
+        <ul>
+            <li><a href="Data/news_data_cn.csv"> Chinese Version </a></li>
+            <li><a href="Data/news_data.csv"> English Version </a></li>
+        </ul>
+        English version mainly is translated from the Chinese version via <strong>POE gpt-3.5-turbo</strong> API.
+        The logic and structure of the market news data extraction is:
+        <ul>
+            <li>
+                <strong>Translator</strong> Class
+                <p display="block">In this class, I link to the <strong>POE gpt-3.5-turbo</strong> via api key with a free quota account. 
+                    Everyday, I get 3000 free tokens.  
+                </p>
+            </li>
+            <li>
+                <strong>WallStreetNews</strong> Class    
+            </li>
+            <li>
+                <strong>NewsDetails</strong> Class    
+            </li>
+        </ul>
+    </div>
+
+    <div>
+        <a href="DecisionTrees"> Code: Decision Tree Model </a>
+    </div>
+    
+    <div>
+        <a href="TextProcessor"> Code: Text Data Prepocessor </a>
+    </div>
+    
 </body>
 </html>
