@@ -9,7 +9,6 @@ import requests
 from selenium import webdriver
 import time
 from bs4 import BeautifulSoup
-from openai import OpenAI
 import json
 import datetime
 import pytz
@@ -169,6 +168,17 @@ class Translator():
         print(f'status code: {response.status_code}')
         translated = response.json()['choices'][0]['message']['content']
         return translated
+    
+    def translateList(self, contentList):
+        user_messages = self.messages + [{'role': 'user', 'content': '\n'.join(contentList)}]
+        data = {
+            'model': 'gpt-3.5-turbo',
+            'messages': user_messages
+        }
+        response = requests.post(self.baseUrl, headers=self.headers, json=data)
+        print(f'status code: {response.status_code}')
+        translated = response.json()['choices'][0]['message']['content']
+        return translated.splitlines()
 
 
 def operationSpiderAbstractsEN(limit=50, channel='global', loadTimes=1):
@@ -307,5 +317,5 @@ def translator(contentsList):
 
 
 if __name__ == '__main__':
-    # operationSpiderAbstractsCN(loadTimes=50)
-    operationSpiderAbstractsEN(loadTimes=3)
+    operationSpiderAbstractsCN(loadTimes=1, limit=20)
+    operationSpiderAbstractsEN(loadTimes=1, limit=20)
