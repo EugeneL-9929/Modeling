@@ -22,6 +22,8 @@ Data Type:
     CPI
         Granule: Monthly
         Function: CPI
+    Company Overview
+        Granule: Quarter
 '''
 
 class AlphaVantageData():
