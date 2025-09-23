@@ -196,7 +196,7 @@ def operationSpiderAbstractsEN(limit=50, channel='global', loadTimes=1):
         titlesList = wsn.getTitles()
         authorsList = wsn.getAuthors()
         try:
-            history = pd.read_csv('news_data.csv', usecols=['time'], index_col='time')
+            history = pd.read_csv('Data/news_data.csv', usecols=['time'], index_col='time')
             for i, j, k, l, m in zip(timesList, summaryList, idsList, titlesList, authorsList):
                 if i not in history.index:
                     df['time'].append(i)
@@ -207,11 +207,11 @@ def operationSpiderAbstractsEN(limit=50, channel='global', loadTimes=1):
                 else:
                     print('repeat data')
             df = pd.DataFrame(df)
-            df.to_csv('news_data.csv', mode='a', index=False, header=not os.path.exists('news_data.csv'))
+            df.to_csv('Data/news_data.csv', mode='a', index=False, header=not os.path.exists('Data/news_data.csv'))
         except FileNotFoundError as e:
             df = pd.DataFrame(
                 {'time': timesList, 'title': titlesList, 'abstract': summaryList, 'id': idsList, 'author': authorsList})
-            df.to_csv('news_data.csv', index=False, encoding='utf-8-sig')
+            df.to_csv('Data/news_data.csv', index=False, encoding='utf-8-sig')
 
 
 def operationSpiderAbstractsCN(limit=50, channel='global', loadTimes=1):
@@ -228,7 +228,7 @@ def operationSpiderAbstractsCN(limit=50, channel='global', loadTimes=1):
         titlesList = wsn.getTitles()
         authorsList = wsn.getAuthors()
         try:
-            history = pd.read_csv('news_data_cn.csv', usecols=['time'], index_col='time')
+            history = pd.read_csv('Data/news_data_cn.csv', usecols=['time'], index_col='time')
             for i, j, k, l, m in zip(timesList, summaryList, idsList, titlesList, authorsList):
                 if i not in history.index:
                     df['time'].append(i)
@@ -239,11 +239,11 @@ def operationSpiderAbstractsCN(limit=50, channel='global', loadTimes=1):
                 else:
                     print('repeat data')
             df = pd.DataFrame(df)
-            df.to_csv('news_data_cn.csv', mode='a', index=False, header=not os.path.exists('news_data_cn.csv'))
+            df.to_csv('Data/news_data_cn.csv', mode='a', index=False, header=not os.path.exists('Data/news_data_cn.csv'))
         except FileNotFoundError as e:
             df = pd.DataFrame(
                 {'time': timesList, 'title': titlesList, 'abstract': summaryList, 'id': idsList, 'author': authorsList})
-            df.to_csv('news_data_cn.csv', index=False, encoding='utf-8-sig')
+            df.to_csv('Data/news_data_cn.csv', index=False, encoding='utf-8-sig')
 
 
 ######################################################################################

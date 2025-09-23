@@ -47,6 +47,17 @@
     <div>
         <a href="TextProcessor"> Code: Text Data Prepocessor </a>
     </div>
-    
+
+    <div id="attentions">
+        <ul>
+            <li> When you initialize the python environment in VS Code,
+                Powershell will auto-activate the anaconda base. Anaconda Path will be
+                added to the <code style = color:red>$env:PATH-Process</code> automatically.
+                Especially, <code style = color:red>../anaconda3\Library\mingw-w64\bin</code> leads to clash with 
+                <code style = color:red>../msys64\ucrt64\bin</code> and compilation failure of cpp codes.
+                To solve this, please run 
+                <code style = color:red>conda config --set auto_activate_base false</code> in the powershell window.</li>
+        </ul>
+    </div>
 </body>
 </html>
