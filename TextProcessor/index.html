@@ -11,5 +11,23 @@
         $$TF=\frac{n_{i, j}}{\sum_kn_{k, j}}$$ term frequency
         $$IDF=log\left(\frac{D}{Df(t)}\right)$$
     </p>
+    <div>
+        <h1> Static Embedding: <a href="VectorProcessor.py"><code>VectorProcessor.py</code></a></h1>
+        <p> The tokens are vectorized based on a shallow neural network structure. Usually,
+            it can be simply expressed as $$S^{dict}_{out}=W^{wv}_{out, in}V^{word}_{in}$$
+            \(in\) features the dimension of the each word's vector. \(out\) represents the
+            size of the dictionary. \(S^{dict}_{out}\) is a softmax output in a 
+            <code>Word2Vec</code> model. 
+        </p>
+        <p>
+            <code>Word2Vec</code> has two modes including the continuous bag of words (CBOW) 
+            and Skip gram (SG). Lacking of the corpus, we can load the pretained model via
+            <code>Gensim</code> library and tune it to meet the specific needs.   
+        </p>
+    </div>
+    
+    <div>
+        <h1> Dynamic Embedding: <a href="DynamicProcessor.py"><code>DynamicProcessor.py</code></a></h1>
+    </div>
 </body>
 </html>
