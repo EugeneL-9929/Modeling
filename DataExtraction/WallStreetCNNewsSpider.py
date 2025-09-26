@@ -135,7 +135,7 @@ class NewsDetails():
 class Translator():
     def __init__(self, extraConstraint=''):
         self.baseUrl = 'https://api.poe.com/v1/chat/completions'
-        self.apiKey = '7lzyWWmjzYndyaKuHa2tnLpbqN5GxwGfqbbvUtkZRiQ'
+        self.apiKey = 'Your API KEY'
         self.headers = {
             'Authorization': f'Bearer {self.apiKey}',
             'Content-Type': 'application/json'
