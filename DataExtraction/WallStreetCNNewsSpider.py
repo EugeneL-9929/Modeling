@@ -135,7 +135,7 @@ class NewsDetails():
 class Translator():
     def __init__(self, extraConstraint=''):
         self.baseUrl = 'https://api.poe.com/v1/chat/completions'
-        self.apiKey = 'Your API KEY'
+        self.apiKey = 'Your API Key'
         self.headers = {
             'Authorization': f'Bearer {self.apiKey}',
             'Content-Type': 'application/json'
@@ -249,5 +249,5 @@ def operationSpiderAbstractsCN(limit=50, channel='global', loadTimes=1):
 ######################################################################################
 
 if __name__ == '__main__':
-    operationSpiderAbstractsCN(loadTimes=14, limit=50)
-    operationSpiderAbstractsEN(loadTimes=14, limit=50)
+    operationSpiderAbstractsCN(loadTimes=25, limit=50)
+    operationSpiderAbstractsEN(loadTimes=25, limit=50)
