@@ -6,11 +6,17 @@ import matplotlib.pyplot as plt
 import sqlite3
 
 def dataPreparations():
-    sqlite3.connect()
+    connectorHeader = sqlite3.connect('../Equity_Analysis/sqlite/stock.sqlite')
+    cursor = connectorHeader.cursor()
+    print(dir(cursor))
+    cursor.executescript('''
+    SELECT 
+    ''')
 
 
 
 if __name__ == '__main__':
+    dataPreparations()
     X, _ = make_blobs(n_samples=300, centers=4, random_state=42, n_features=4)
     print(type(X))
 
