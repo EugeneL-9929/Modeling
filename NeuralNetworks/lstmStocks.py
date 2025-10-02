@@ -22,15 +22,15 @@ class StockLSTMModel(nn.Module):
         self.activation = nn.ELU()
     
     def forward(self, input):
-        h0 = torch.zeros(self.layers, input.shape[0], self.lstm.hidden_size).requires_grad_()
-        c0 = torch.zeros(self.layers, input.shape[0], self.lstm.hidden_size).requires_grad_()
+        h0 = torch.zeros(self.layers, input.shape[0], self.lstm.hidden_size, device=input.device).requires_grad_()
+        c0 = torch.zeros(self.layers, input.shape[0], self.lstm.hidden_size, device=input.device).requires_grad_()
         hiddenBySeries, [hiddenByLayers, cellByLayers] = self.lstm(input, (h0.detach(), c0.detach()))
-        # lstmOutput = hiddenBySeries[:, -1, :]
-        lstmOutput = hiddenBySeries.reshape(-1, self.lstm.hidden_size)
+        lstmOutput = hiddenBySeries[:, -1, :]
+        # lstmOutput = hiddenBySeries.reshape(-1, self.lstm.hidden_size)
         activation = self.activation(lstmOutput)
         output = self.linear(activation)
-        output = output.reshape(-1, self.steps, self.outputSize)
-        return output[:, -1, :]
+        # output = output.reshape(-1, self.steps, self.outputSize)
+        return output # output[:, -1, :]
 
 class StockLSTMOptimization():
     def __init__(self, model, trainDataset, validDataset, criterion, device):
@@ -71,7 +71,6 @@ class StockLSTMOptimization():
             output = self.model(data)
             loss = self.criterion(output, target)
             runningLoss += loss.item()
-            
             self.optimizer.zero_grad()
             loss.backward()
             nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
