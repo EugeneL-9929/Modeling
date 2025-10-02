@@ -22,7 +22,10 @@ class StockLSTMModel(nn.Module):
         self.activation = nn.ELU()
     
     def forward(self, input):
-        hiddenBySeries, [hiddenByLayers, cellByLayers] = self.lstm(input)
+        h0 = torch.zeros(self.layers, input.shape[0], self.lstm.hidden_size).requires_grad_()
+        c0 = torch.zeros(self.layers, input.shape[0], self.lstm.hidden_size).requires_grad_()
+        hiddenBySeries, [hiddenByLayers, cellByLayers] = self.lstm(input, (h0.detach(), c0.detach()))
+        # lstmOutput = hiddenBySeries[:, -1, :]
         lstmOutput = hiddenBySeries.reshape(-1, self.lstm.hidden_size)
         activation = self.activation(lstmOutput)
         output = self.linear(activation)
@@ -65,13 +68,14 @@ class StockLSTMOptimization():
         runningLoss = 0
         for batchID, (data, target) in enumerate(self.trainDataset):
             data, target = data.to(self.device), target.to(self.device)
-            self.optimizer.zero_grad()
             output = self.model(data)
             loss = self.criterion(output, target)
+            runningLoss += loss.item()
+            
+            self.optimizer.zero_grad()
             loss.backward()
             nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
             self.optimizer.step()
-            runningLoss += loss.item()
         epochLoss = runningLoss/len(self.trainDataset)
         self.trainLosses.append(epochLoss)
         return epochLoss
