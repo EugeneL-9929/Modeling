@@ -1,5 +1,7 @@
 import torch.nn as nn
 import torch.optim as optim
+import torch.optim.lr_scheduler as lr_scheduler
+
 
 class Optimizer():
     def __init__(self, model, trainDataset, validDataset, criterion, device):
@@ -16,29 +18,48 @@ class Optimizer():
         self.validLosses = []
         self.learningRates = []
     
-    def optimizorSGD(self, learningRate=0.01, **kwargs):
-        self.optimizer = optim.SGD(
-            self.model.parameters(),
-            lr=learningRate,
-            momentum=kwargs.get('beta', 0.9),
-            weight_decay=kwargs.get('weight_decay', 0.0),
-        )
-    
-    
-    def optimizorAdam(self, learningRate=0.001, **kwargs):
-        self.optimizer = optim.Adam(
+    def setOptimizer(self, optimizerName, learningRate=0.01, **kwargs):
+        if optimizerName.lower() == 'sgd':
+            self.optimizer = optim.SGD(
+                self.model.parameters(),
+                lr=learningRate,
+                momentum=kwargs.get('beta', 0.9),
+                weight_decay=kwargs.get('weight_decay', 0.0),
+            )
+        elif optimizerName.lower() == 'adagrad':
+            self.optimizer = optim.Adagrad(
+                self.model.parameters(),
+                lr=learningRate,
+            )
+        elif optimizerName.lower() == 'rmsprop':
+            self.optimizer = optim.RMSprop(
+                self.model.parameters(),
+                lr=learningRate,
+            )
+        elif optimizerName.lower() == 'adam':
+            self.optimizer = optim.Adam(
             self.model.parameters(),
             lr=learningRate,
             betas=kwargs.get('betas', (0.9, 0.999)),
             eps=kwargs.get('epsilon', 1e-8),
             weight_decay=kwargs.get('weight_devay', 0),
         )
+        else:
+            print('please provide the correct optimizer name. "SGD", "AdaGrad", "RMSProp", "ADAM".')
     
-    def optimizorAdagrad(self, learningRate=0.001, **kwargs):
-        self.optimizer = optim.Adagrad(
-            self.model.parameters(),
-            lr=learningRate,
-        )
+
+    def setScheduler(self, schedulerName, **kwargs):
+        if schedulerName.lower() == 'steplr':
+            self.scheduler = lr_scheduler.StepLR(
+                self.optimizer,
+                step_size=kwargs.get('step_size', 30),
+                gamma=kwargs.get('gamma', 0.1),
+            )
+        elif schedulerName.lower() == 'reducelronplateau':
+            self.scheduler = lr_scheduler.ReduceLROnPlateau(
+                self.optimizer,
+            )
+        
     
     def schedulerStepLR(self, **kwargs):
         self.scheduler = StepLR(
